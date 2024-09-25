@@ -1,5 +1,6 @@
 #include <stdio.h> 
 #include <stdlib.h>
+#include <time.h>
 #include <conio.h> // 콘솔 입출력 함수를 제공
 #include <Windows.h> // 윈도우 용의 수 많은 함수를 제공
 
@@ -10,18 +11,6 @@
 #define WHITE 7 
 #define RED 4
 #define BLUE 1
-#define YELLOW 6
-
-enum { // 게임 시작, 종료 관련 enum 
-	GAME_START = 0,
-	GAME_EXIT
-};
-
-enum { // 게임 플레이어 관련 enum
-	NONE = 0,
-	PALYER_1,
-	PALYER_2
-};
 
 typedef struct score { // 게임 스코어 관련 구조체
 	int player;
@@ -31,18 +20,17 @@ typedef struct score { // 게임 스코어 관련 구조체
 int OorX[3][3] = { 0, }; // O와 X의 위치를 저장하는 변수
 int player = 0; // 현재 플레이어를 저장하는 변수
 int gameFlag = 0; // 게임 시작 여부 관련 변수
-int gameMenu = 0; // 선택된 메뉴 관련 변수
 int turnCount = 0; // 게임 턴 횟수 변수
 int gameEnd = 0; //게임 종료 여부 변수
-int XY[2] = { 2, 1 };
+int start = 0; //게임 시작 여부 변수
+int XY[2] = { 2, 1 }; //현 선택 좌표 변수
 
 Score score = { 0, 0 }; // 게임 스코어 관련 변수
 
-void gameScreen();
 void printGameStartScreen();
 void gameStartScreen();
 void printGameStartScreen();
-void gotoMouseXY(int x, int y);
+void MouseXY(int x, int y);
 void inputGameMenu();
 void selectedGameMenu();
 void gamePlayingScreen();
@@ -51,7 +39,7 @@ void inputGame();
 void map_reset();
 void selectedMap();
 void computer_selectedMap();
-int win_test();
+int win_test(int who);
 
 char original_map[50][50] = {
 	{"-------------\n"},
@@ -71,16 +59,13 @@ int ox_map[3][4] = {
 
 void main() {
 	while (1) {
-		gameScreen();
-	}
-}
-
-void gameScreen() {
-	if (!gameFlag) {
-		gameStartScreen();
-	}
-	else {
-		gamePlayingScreen();
+		if (gameFlag == 0) {
+			gameEnd = 0;
+			gameStartScreen();
+		}
+		else {
+			gamePlayingScreen();
+		}
 	}
 }
 
@@ -104,9 +89,9 @@ void gamePlayingScreen() {
 		}
 	}
 
-	gotoMouseXY(XY[0], XY[1]);
+	MouseXY(XY[0], XY[1]);
 	printf("■");
-	while (gameFlag = 1) {
+	while (gameFlag == 1) {
 		inputGame();
 	}
 }
@@ -121,7 +106,7 @@ void printGameStartScreen() {
 	printf("▷게임종료");
 }
 
-void gotoMouseXY(int x, int y) { 
+void MouseXY(int x, int y) { 
 	COORD cur;
 	cur.X = x;
 	cur.Y = y;
@@ -133,26 +118,27 @@ void inputGameMenu() {
 	char key = getch(); // getch()는 키보드의 하나 키를 입력 받을 수 있게 하는 함수
 
 	if (key == 'w' || key == 'W') {
-		gotoMouseXY(0, 4);
+		MouseXY(0, 4);
 		printf("▶\n\r▷");
-		gameMenu = GAME_START;
+		start = 0;
 	}
 	else if (key == 's' || key == 'S') {
-		gotoMouseXY(0, 4);
+		MouseXY(0, 4);
 		printf("▷\n\r▶");
-		gameMenu = GAME_EXIT;
+		start = 1;
 	}
 	else if (key == '\r') {
 		selectedGameMenu();
 	}
+	MouseXY(0, 6);
 }
 
 void selectedGameMenu() {
-	switch (gameMenu) {
-	case GAME_START:
+	switch (start) {
+	case 0:
 		gameFlag = 1;
 		break;
-	case GAME_EXIT:
+	case 1:
 		exit(0); // 프로그램을 종료 하는 함수
 		break;
 	}
@@ -164,48 +150,57 @@ void inputGame() {
 	if (XY[0] != 2 && gameEnd != 1 && (key == 'a' || key == 'A')) {
 		map_reset();
 		XY[0] -= 4;
-		gotoMouseXY(XY[0], XY[1]);
+		MouseXY(XY[0], XY[1]);
 		printf("■");
 	}
 	else if (XY[0] != 10 && gameEnd != 1 && (key == 'd' || key == 'D')) {
 		map_reset();
 		XY[0] += 4;
-		gotoMouseXY(XY[0], XY[1]);
+		MouseXY(XY[0], XY[1]);
 		printf("■");
 	}
 	else if (XY[1] != 5 && gameEnd != 1 && (key == 's' || key == 'S')) {
 		map_reset();
 		XY[1] += 2;
-		gotoMouseXY(XY[0], XY[1]);
+		MouseXY(XY[0], XY[1]);
 		printf("■");
 	}
 	else if (XY[1] != 1 && gameEnd != 1 && (key == 'w' || key == 'W')) {
 		map_reset();
 		XY[1] -= 2;
-		gotoMouseXY(XY[0], XY[1]);
+		MouseXY(XY[0], XY[1]);
 		printf("■");
 	}
 	else if (key == '\r') {
-		if (gameEnd == 0) {
+		if (gameEnd == 0 && ox_map[(XY[1]-1)/2][(XY[0]-2)/4] == 0) {
 			selectedMap();
 		}
-		else {
+		else if (gameEnd == 1) {
 			gameFlag = 0;
 		}
 	}
 
-	gotoMouseXY(0, 7);
+	MouseXY(0, 7);
 	//printf("%d %d", XY[0], XY[1]);
 	for (int i = 0; i < 3; i++) {
 		printf("%d %d %d\n", ox_map[i][0], ox_map[i][1], ox_map[i][2]);
 	}
+	printf("gameFlag : %d\n", gameFlag);
+	printf("gameEnd : %d\n", gameEnd);
 }
 
 void selectedMap() {
 	ox_map[(XY[1] + 1) / 2 - 1][(XY[0] + 2) / 4 - 1] = 1;
+
+	map_reset();
 	if (win_test(1) == 1) {
-		gotoMouseXY(0, 13);
+		MouseXY(0, 13);
 		printf("[player] 승리!");
+		gameEnd = 1;
+	}
+	else if (win_test(1) == 2) {
+		MouseXY(0, 13);
+		printf("[DRAW]");
 		gameEnd = 1;
 	}
 	else {
@@ -213,8 +208,13 @@ void selectedMap() {
 		map_reset();
 
 		if (win_test(2) == 1) {
-			gotoMouseXY(0, 13);
+			MouseXY(0, 13);
 			printf("[computer] 승리!");
+			gameEnd = 1;
+		}
+		else if (win_test(2) == 2) {
+			MouseXY(0, 13);
+			printf("[DRAW]");
 			gameEnd = 1;
 		}
 	}
@@ -311,7 +311,7 @@ void computer_selectedMap() {
 		int rand2 = (rand() % 3+1)*4;
 		if (ox_map[rand1 / 2 - 1][rand2 / 4 - 1] == 0) {
 			ox_map[rand1 / 2 - 1][rand2 / 4 - 1] = 2;
-			gotoMouseXY(0, 11);
+			MouseXY(0, 11);
 			printf("랜덤 지정");
 			break;
 		}
@@ -391,24 +391,38 @@ int win_test(int who) { //각 턴이 끝나면 1 혹은 2를 입력받아 승리했는지 검사
 			}
 		}
 	}
+
+	count = 0;
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			if (ox_map[i][j] != 0) {
+				count += 1;
+			}
+
+			if (count == 9) {
+				return 2;
+			}
+		}
+	}
+
 	return 0;
 }
 
 void map_reset() {
 	system("cls");
-	gotoMouseXY(0, 0);
+	MouseXY(0, 0);
 	for (int i = 0; i < 7; i++) {
 		printf(original_map[i]);
 	}
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			if (ox_map[j][i] == 1) {
-				gotoMouseXY(2+(4*i), 1+(2*j));
+				MouseXY(2+(4*i), 1+(2*j));
 				SetConsoleTextAttribute(COUT, BLUE);
 				printf("●");
 			}
 			else if (ox_map[j][i] == 2) {
-				gotoMouseXY(2 + (4 * i), 1 + (2 * j));
+				MouseXY(2 + (4 * i), 1 + (2 * j));
 				SetConsoleTextAttribute(COUT, RED);
 				printf("●");
 			}
