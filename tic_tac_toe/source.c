@@ -17,15 +17,12 @@ typedef struct score { // 게임 스코어 관련 구조체
 	int computer;
 } Score;
 
-int OorX[3][3] = { 0, }; // O와 X의 위치를 저장하는 변수
-int player = 0; // 현재 플레이어를 저장하는 변수
+Score score = { 0, 0 }; // 게임 스코어 관련 변수
+
 int gameFlag = 0; // 게임 시작 여부 관련 변수
-int turnCount = 0; // 게임 턴 횟수 변수
 int gameEnd = 0; //게임 종료 여부 변수
 int start = 0; //게임 시작 여부 변수
 int XY[2] = { 2, 1 }; //현 선택 좌표 변수
-
-Score score = { 0, 0 }; // 게임 스코어 관련 변수
 
 void printGameStartScreen();
 void gameStartScreen();
@@ -51,7 +48,7 @@ char original_map[50][50] = {
 	{"-------------\n"}
 };
 
-int ox_map[3][4] = {
+int ox_map[3][3] = {
 	{0, 0, 0},
 	{0, 0, 0},
 	{0, 0, 0}
@@ -107,11 +104,11 @@ void printGameStartScreen() {
 }
 
 void MouseXY(int x, int y) { 
-	COORD cur;
-	cur.X = x;
-	cur.Y = y;
+	COORD pos;
+	pos.X = x;
+	pos.Y = y;
 
-	SetConsoleCursorPosition(COUT, cur);
+	SetConsoleCursorPosition(COUT, pos);
 }
 
 void inputGameMenu() {
@@ -181,12 +178,13 @@ void inputGame() {
 	}
 
 	MouseXY(0, 7);
-	//printf("%d %d", XY[0], XY[1]);
+	/*
 	for (int i = 0; i < 3; i++) {
 		printf("%d %d %d\n", ox_map[i][0], ox_map[i][1], ox_map[i][2]);
 	}
 	printf("gameFlag : %d\n", gameFlag);
 	printf("gameEnd : %d\n", gameEnd);
+	*/
 }
 
 void selectedMap() {
@@ -194,12 +192,12 @@ void selectedMap() {
 
 	map_reset();
 	if (win_test(1) == 1) {
-		MouseXY(0, 13);
+		MouseXY(0, 8);
 		printf("[player] 승리!");
 		gameEnd = 1;
 	}
 	else if (win_test(1) == 2) {
-		MouseXY(0, 13);
+		MouseXY(0, 8);
 		printf("[DRAW]");
 		gameEnd = 1;
 	}
@@ -208,12 +206,12 @@ void selectedMap() {
 		map_reset();
 
 		if (win_test(2) == 1) {
-			MouseXY(0, 13);
+			MouseXY(0, 8);
 			printf("[computer] 승리!");
 			gameEnd = 1;
 		}
 		else if (win_test(2) == 2) {
-			MouseXY(0, 13);
+			MouseXY(0, 8);
 			printf("[DRAW]");
 			gameEnd = 1;
 		}
@@ -404,7 +402,6 @@ int win_test(int who) { //각 턴이 끝나면 1 혹은 2를 입력받아 승리했는지 검사
 			}
 		}
 	}
-
 	return 0;
 }
 
